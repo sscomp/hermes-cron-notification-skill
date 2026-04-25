@@ -4,6 +4,26 @@ Hermes 專用的定時提醒技能包。
 
 把原本分散的 cron 提醒腳本整理成一個可安裝、可遷移、可重複部署的 Hermes skill package，讓每個 Hermes profile 都能有自己的提醒系統。
 
+## 安裝摘要
+
+```bash
+./scripts/install-profile.sh ~/.hermes/profiles/n2
+```
+
+安裝完成後會自動幫你：
+
+- 安裝 `hermes-cron-notification` skill
+- 建立 `scheduler` 腳本與 `hcron` wrapper
+- 建立或沿用 `cron/schedule.json`
+- 註冊對應 profile 的 `launchd` agent
+- 遷移舊版 `hermes-scheduler`
+
+最適合用在：
+
+- `Hermes + macOS + launchd`
+- 需要 Telegram 定時提醒
+- 有多個 Hermes profiles，要各自維護排程
+
 ## 它是做什麼的
 
 - 幫 Hermes profile 建立自己的提醒排程
@@ -92,6 +112,13 @@ installer 會把以下 quick commands 合併到 profile 的 `config.yaml`：
 - `/remind-cancel`
 - `/remind-enable`
 - `/remind-disable`
+
+## Roadmap
+
+- 支援更多通知通道，不只 Telegram
+- 補上更完整的 profile 安裝驗證流程
+- 規劃匯出／匯入排程資料的輔助工具
+- 補上 GitHub release 與版本變更記錄流程
 
 ## 排程格式
 
