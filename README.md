@@ -2,13 +2,13 @@
 
 Hermes 專用的定時提醒技能包。
 
-把原本分散的 cron 提醒腳本整理成一個可安裝、可遷移、可重複部署的 Hermes skill package。
+把原本分散的 cron 提醒腳本整理成一個可安裝、可遷移、可重複部署的 Hermes skill package，讓每個 Hermes profile 都能有自己的提醒系統。
 
 ## 它是做什麼的
 
 - 幫 Hermes profile 建立自己的提醒排程
 - 支援單次提醒與每日提醒
-- 自動安裝 skill、scheduler、wrapper 與 launchd runner
+- 自動安裝 skill、scheduler、wrapper 與 `launchd` runner
 - 保留舊版排程資料，方便從 `hermes-scheduler` 遷移
 
 一句話理解：
@@ -34,15 +34,13 @@ Hermes 專用的定時提醒技能包。
 安裝到指定 profile：
 
 ```bash
-/Users/sscomp/hermes-cron-notification-skill/scripts/install-profile.sh /Users/sscomp/.hermes/profiles/n2
+./scripts/install-profile.sh ~/.hermes/profiles/n2
 ```
 
-如果只想寫入檔案，不重新載入 launchd：
+如果只想寫入檔案，不重新載入 `launchd`：
 
 ```bash
-/Users/sscomp/hermes-cron-notification-skill/scripts/install-profile.sh \
-  /Users/sscomp/.hermes/profiles/n2 \
-  --no-launchctl
+./scripts/install-profile.sh ~/.hermes/profiles/n2 --no-launchctl
 ```
 
 ## 安裝後你會得到什麼
@@ -64,25 +62,25 @@ Hermes 專用的定時提醒技能包。
 列出排程：
 
 ```bash
-HERMES_HOME=/Users/sscomp/.hermes/profiles/n2 /Users/sscomp/.hermes/profiles/n2/bin/hcron list
+HERMES_HOME=~/.hermes/profiles/n2 ~/.hermes/profiles/n2/bin/hcron list
 ```
 
 新增單次提醒：
 
 ```bash
-HERMES_HOME=/Users/sscomp/.hermes/profiles/n2 /Users/sscomp/.hermes/profiles/n2/bin/hcron add 5132341473 "2026-04-27T09:00:00+08:00" "提醒內容"
+HERMES_HOME=~/.hermes/profiles/n2 ~/.hermes/profiles/n2/bin/hcron add 5132341473 "2026-04-27T09:00:00+08:00" "提醒內容"
 ```
 
 新增每日提醒：
 
 ```bash
-HERMES_HOME=/Users/sscomp/.hermes/profiles/n2 /Users/sscomp/.hermes/profiles/n2/bin/hcron add 5132341473 "每日 09:00" "早安提醒"
+HERMES_HOME=~/.hermes/profiles/n2 ~/.hermes/profiles/n2/bin/hcron add 5132341473 "每日 09:00" "早安提醒"
 ```
 
 取消提醒：
 
 ```bash
-HERMES_HOME=/Users/sscomp/.hermes/profiles/n2 /Users/sscomp/.hermes/profiles/n2/bin/hcron cancel <jobId>
+HERMES_HOME=~/.hermes/profiles/n2 ~/.hermes/profiles/n2/bin/hcron cancel <jobId>
 ```
 
 ## Hermes Quick Commands
@@ -115,23 +113,25 @@ installer 會把以下 quick commands 合併到 profile 的 `config.yaml`：
 
 ## Repo 結構
 
-- [scripts/install-profile.sh](/Users/sscomp/hermes-cron-notification-skill/scripts/install-profile.sh)
-  安裝器，負責複製檔案、合併 quick commands、建立 launchd agent
-- [skill/SKILL.md](/Users/sscomp/hermes-cron-notification-skill/skill/SKILL.md)
+- `scripts/install-profile.sh`
+  安裝器，負責複製檔案、合併 quick commands、建立 `launchd` agent
+- `skill/SKILL.md`
   給 Hermes agent 使用的 skill 說明
-- [scheduler/scripts/add-schedule.js](/Users/sscomp/hermes-cron-notification-skill/scheduler/scripts/add-schedule.js)
+- `scheduler/scripts/add-schedule.js`
   排程的新增、查詢、取消、啟停
-- [scheduler/scripts/run-due.js](/Users/sscomp/hermes-cron-notification-skill/scheduler/scripts/run-due.js)
+- `scheduler/scripts/run-due.js`
   掃描到期任務並執行
-- [scheduler/scripts/send-reminder.sh](/Users/sscomp/hermes-cron-notification-skill/scheduler/scripts/send-reminder.sh)
+- `scheduler/scripts/send-reminder.sh`
   實際發送 Telegram 通知
-- [scheduler/scripts/hcron.sh](/Users/sscomp/hermes-cron-notification-skill/scheduler/scripts/hcron.sh)
+- `scheduler/scripts/hcron.sh`
   profile-local wrapper 入口
 
 ## 目前範圍
 
 - 支援 Telegram 通知
-- 目標環境是 macOS + launchd + Hermes profiles
+- 目標環境是 macOS + `launchd` + Hermes profiles
 - 主要面向 Hermes-first 的本地部署情境
 
-Version: `0.1.0`
+## License
+
+MIT
