@@ -107,6 +107,53 @@ HERMES_HOME=~/.hermes/profiles/n2 ~/.hermes/profiles/n2/bin/hcron add "每日 09
 HERMES_HOME=~/.hermes/profiles/n2 ~/.hermes/profiles/n2/bin/hcron cancel <jobId>
 ```
 
+## 範例
+
+這些範例可以直接複製後再把時間或內容改掉。
+
+Telegram quick commands：
+
+```text
+/remind-list
+/remind-add 每日 03:00 提醒鼎鼎該睡覺了
+/remind-add 每日 09:00 提醒我開早會
+/remind-add 2026-04-26T23:30:00+08:00 提醒我把衣服拿去洗
+/remind-cancel <jobId>
+/remind-disable <jobId>
+/remind-enable <jobId>
+```
+
+終端機：
+
+```bash
+HERMES_HOME=~/.hermes/profiles/m2 ~/.hermes/profiles/m2/bin/hcron list
+HERMES_HOME=~/.hermes/profiles/m2 ~/.hermes/profiles/m2/bin/hcron add "每日 03:00 提醒鼎鼎該睡覺了"
+HERMES_HOME=~/.hermes/profiles/m2 ~/.hermes/profiles/m2/bin/hcron add "2026-04-26T23:30:00+08:00 提醒我把衣服拿去洗"
+HERMES_HOME=~/.hermes/profiles/m2 ~/.hermes/profiles/m2/bin/hcron cancel 6e502e78b0f1
+```
+
+指定 userId 的寫法：
+
+```bash
+HERMES_HOME=~/.hermes/profiles/n2 ~/.hermes/profiles/n2/bin/hcron add 5132341473 "每日 21:30" "提醒我收工"
+HERMES_HOME=~/.hermes/profiles/n2 ~/.hermes/profiles/n2/bin/hcron add 5132341473 "2026-04-27T08:30:00+08:00" "提醒我出門"
+```
+
+常見情境：
+
+- 每天固定時間提醒：
+  `/remind-add 每日 07:30 提醒我出門前帶鑰匙`
+- 晚上睡前提醒：
+  `/remind-add 每日 23:00 提醒我準備睡覺`
+- 指定日期的一次性提醒：
+  `/remind-add 2026-04-30T14:00:00+08:00 提醒我和客戶開會`
+- 查看目前所有排程：
+  `/remind-list`
+- 暫停某筆排程：
+  `/remind-disable <jobId>`
+- 重新啟用某筆排程：
+  `/remind-enable <jobId>`
+
 ## Hermes Quick Commands
 
 installer 會把以下 quick commands 合併到 profile 的 `config.yaml`：
