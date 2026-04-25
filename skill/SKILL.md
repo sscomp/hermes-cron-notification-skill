@@ -41,11 +41,18 @@ HERMES_HOME="$HERMES_HOME" "$HERMES_HOME/bin/hcron" add "5132341473" "每日 09:
 HERMES_HOME="$HERMES_HOME" "$HERMES_HOME/bin/hcron" list
 ```
 
+`list` 會同時列出：
+
+- `hermes-cron-notification` 自己的提醒排程
+- Hermes 原生內建 cron (`cron/jobs.json`)
+
 取消排程：
 
 ```bash
 HERMES_HOME="$HERMES_HOME" "$HERMES_HOME/bin/hcron" cancel "<jobId>"
 ```
+
+如果 `jobId` 來自 Hermes 原生 cron，`cancel` 會直接刪除那筆原生排程。
 
 ## 驗證
 新增、取消、啟用或停用排程後，必須查詢一次：

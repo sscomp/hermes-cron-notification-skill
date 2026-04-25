@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 const hermesHome =
   process.env.HERMES_HOME ||
@@ -22,6 +23,10 @@ const profileName = path.basename(hermesHome);
 const cronDir = path.join(hermesHome, 'cron');
 const scheduleFile = path.join(cronDir, 'schedule.json');
 const targetsFile = path.join(hermesHome, 'scheduler', 'notification-targets.json');
+const hermesRoot = path.resolve(hermesHome, '..', '..');
+const nativeBridge = path.join(hermesHome, 'scheduler', 'scripts', 'native-cron-bridge.py');
+const nativePython =
+  process.env.HERMES_PYTHON || path.join(hermesRoot, 'hermes-agent', 'venv', 'bin', 'python');
 
 function readJson(file, fallback) {
   if (!fs.existsSync(file)) return fallback;
@@ -52,6 +57,36 @@ function loadStore() {
   const data = readJson(scheduleFile, { jobs: [], lastUpdated: nowIso() });
   if (!Array.isArray(data.jobs)) data.jobs = [];
   return data;
+}
+
+function reminderView(job) {
+  return {
+    ...job,
+    source: 'hermes-cron-notification',
+    native: false,
+  };
+}
+
+function runNativeBridge(actionName, maybeJobId) {
+  if (!fs.existsSync(nativeBridge) || !fs.existsSync(nativePython)) {
+    if (actionName === 'list') return { success: true, jobs: [] };
+    return { success: false, error: 'Native Hermes cron bridge is unavailable.' };
+  }
+
+  try {
+    const args = [nativeBridge, actionName];
+    if (maybeJobId) args.push(maybeJobId);
+    const raw = execFileSync(nativePython, args, {
+      env: { ...process.env, HERMES_HOME: hermesHome },
+      encoding: 'utf8',
+    });
+    return JSON.parse(raw);
+  } catch (error) {
+    const stderr = error.stderr ? String(error.stderr) : '';
+    const stdout = error.stdout ? String(error.stdout) : '';
+    const message = stderr.trim() || stdout.trim() || error.message;
+    return { success: false, error: message };
+  }
 }
 
 function parseFlags(items) {
@@ -135,7 +170,9 @@ if (action === 'add') {
 }
 
 if (action === 'list') {
-  console.log(JSON.stringify(data.jobs, null, 2));
+  const native = runNativeBridge('list');
+  const combined = [...data.jobs.map(reminderView), ...(native.jobs || [])];
+  console.log(JSON.stringify(combined, null, 2));
   process.exit(0);
 }
 
@@ -147,8 +184,13 @@ if (!jobId) {
 
 const job = data.jobs.find((item) => item.id === jobId);
 if (!job) {
-  console.error(`Job not found: ${jobId}`);
-  process.exit(1);
+  const nativeResult = runNativeBridge(action, jobId);
+  if (!nativeResult.success) {
+    console.error(nativeResult.error || `Job not found: ${jobId}`);
+    process.exit(1);
+  }
+  console.log(JSON.stringify(nativeResult.job, null, 2));
+  process.exit(0);
 }
 
 if (action === 'cancel') {

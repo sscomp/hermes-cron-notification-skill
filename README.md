@@ -46,6 +46,8 @@ Hermes 專用的定時提醒技能包。
 - 用 `cron/schedule.json` 保存排程資料
 - 用 `scheduler/notification-targets.json` 保存通知目標
 - 安裝後提供 `hcron` 指令
+- `/remind-list` 可同時列出 Hermes 原生 cron 與提醒 skill 排程
+- `/remind-cancel` 可刪除 Hermes 原生 cron job 或提醒 skill job
 - 自動建立 `launchd` agent，每分鐘掃描到期任務
 - 目前通知通道以 Telegram 為主
 
@@ -112,6 +114,13 @@ installer 會把以下 quick commands 合併到 profile 的 `config.yaml`：
 - `/remind-cancel`
 - `/remind-enable`
 - `/remind-disable`
+
+目前行為：
+
+- `/remind-list`：同時顯示 Hermes 原生 cron 與 `hermes-cron-notification`
+- `/remind-cancel <jobId>`：若 `jobId` 屬於 Hermes 原生 cron，會直接刪除該 job
+- `/remind-disable <jobId>`：可暫停 Hermes 原生 cron 或提醒 skill job
+- `/remind-enable <jobId>`：可重新啟用 Hermes 原生 cron 或提醒 skill job
 
 ## Roadmap
 
