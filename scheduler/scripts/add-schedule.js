@@ -98,6 +98,84 @@ function parseFlags(items) {
   return flags;
 }
 
+function positionalArgs(items) {
+  return items.filter((item) => !item.startsWith('--'));
+}
+
+function defaultUserIdFromTargets() {
+  const registry = readJson(targetsFile, { users: {} });
+  if (registry.users?.['5132341473']?.[profileName]) return '5132341473';
+
+  const entries = Object.entries(registry.users || {});
+  for (const [userId, profiles] of entries) {
+    if (profiles && profiles[profileName]) return userId;
+  }
+  return '5132341473';
+}
+
+function extractScheduleAndMessage(text) {
+  const patterns = [
+    /(每日\s*\d{1,2}:\d{2})/,
+    /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})?)/,
+    /\b(\d{1,2}:\d{2})\b/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+    const schedule = match[1].replace(/\s+/g, ' ').trim();
+    const after = text.slice(match.index + match[0].length).trim();
+    const before = text.slice(0, match.index).trim();
+    const message = after || before.replace(/^(提醒我|提醒|幫我|訂一個|新增|建立)\s*/u, '').trim();
+    if (message) {
+      return { schedule, message };
+    }
+  }
+
+  return null;
+}
+
+function resolveAddInput(items) {
+  const flags = parseFlags(items);
+  const positionals = positionalArgs(items);
+
+  if (!positionals.length) {
+    throw new Error('Missing arguments for add: time, message');
+  }
+
+  if (positionals.length >= 3) {
+    const first = String(positionals[0]).trim();
+    const second = String(positionals[1]).trim();
+    const looksLikeUserId = /^\d{6,}$/.test(first);
+    const looksLikeSchedule =
+      /^(?:每日\s*)?\d{1,2}:\d{2}$/.test(second) ||
+      /^\d{4}-\d{2}-\d{2}T/.test(second);
+
+    if (looksLikeUserId && looksLikeSchedule) {
+      return {
+        userId: first,
+        time: second,
+        message: positionals.slice(2).join(' ').trim(),
+        flags,
+      };
+    }
+  }
+
+  const parsed = extractScheduleAndMessage(positionals.join(' ').trim());
+  if (!parsed) {
+    throw new Error(
+      'Missing arguments for add: provide "<time> <message>" or "<userId> <time> <message>"'
+    );
+  }
+
+  return {
+    userId: flags.userId || flags.target || defaultUserIdFromTargets(),
+    time: parsed.schedule,
+    message: parsed.message,
+    flags,
+  };
+}
+
 function resolveTarget(userId, explicit) {
   if (explicit.target || explicit.channel || explicit.account) {
     return {
@@ -135,38 +213,33 @@ if (!action || !['add', 'list', 'cancel', 'enable', 'disable'].includes(action))
 const data = loadStore();
 
 if (action === 'add') {
-  const userId = args[1];
-  const time = args[2];
-  const message = args[3];
-  const flags = parseFlags(args.slice(4));
+  try {
+    const input = resolveAddInput(args.slice(1));
+    const target = resolveTarget(input.userId, input.flags);
+    const nativeResult = runNativeBridge(
+      'create',
+      JSON.stringify({
+        userId: input.userId,
+        schedule: normalizeSchedule(input.time),
+        message: input.message,
+        channel: target.channel,
+        account: target.account,
+        target: target.target,
+        userName: input.flags.userName || '',
+      })
+    );
 
-  if (!userId || !time || !message) {
-    console.error('Missing arguments for add: userId, time, message');
+    if (!nativeResult.success) {
+      console.error(nativeResult.error || 'Failed to create remind job.');
+      process.exit(1);
+    }
+
+    console.log(JSON.stringify(nativeResult.job, null, 2));
+    process.exit(0);
+  } catch (error) {
+    console.error(error.message || String(error));
     process.exit(1);
   }
-
-  const target = resolveTarget(userId, flags);
-  const newJob = {
-    id: `${profileName}-${Date.now()}`,
-    profile: profileName,
-    userId,
-    userName: flags.userName || '',
-    scheduleTime: normalizeSchedule(time),
-    message,
-    status: 'scheduled',
-    enabled: true,
-    channel: target.channel,
-    account: target.account,
-    target: target.target,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
-  };
-
-  data.jobs.push(newJob);
-  data.lastUpdated = nowIso();
-  writeJson(scheduleFile, data);
-  console.log(JSON.stringify(newJob, null, 2));
-  process.exit(0);
 }
 
 if (action === 'list') {

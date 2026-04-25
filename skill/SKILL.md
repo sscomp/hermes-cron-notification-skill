@@ -35,6 +35,14 @@ HERMES_HOME="$HERMES_HOME" "$HERMES_HOME/bin/hcron" add "5132341473" "2026-04-27
 HERMES_HOME="$HERMES_HOME" "$HERMES_HOME/bin/hcron" add "5132341473" "每日 09:00" "早安提醒" --channel=telegram --target=5132341473
 ```
 
+簡化輸入也可以：
+
+```bash
+HERMES_HOME="$HERMES_HOME" "$HERMES_HOME/bin/hcron" add "每日 09:00 早安提醒"
+```
+
+`add` 會優先建立 Hermes 原生內建 cron reminder；如果省略 `userId`，會自動使用目前 profile 的預設 Telegram 目標。
+
 查詢排程：
 
 ```bash
